@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Pedido Confirmado - Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="flex-grow flex items-center justify-center px-4 py-16">
+    <div class="max-w-lg w-full space-y-6 text-center">
+        <!-- Icono éxito -->
+        <div class="flex justify-center">
+            <span class="text-7xl">🎉</span>
+        </div>
+        <!-- Título -->
+        <h1 class="text-3xl font-extrabold text-stone-900">¡Pedido realizado con éxito!</h1>
+        <!-- Aviso literal del enunciado -->
+        <div class="bg-amber-100 border-2 border-amber-400 rounded-2xl p-5 text-amber-900 font-semibold text-sm leading-relaxed">
+            Pedido realizado con éxito. Dispone de un plazo máximo de 10 minutos para modificar o cancelar su pedido sin coste.
+        </div>
+        <!-- Detalles del pedido -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 text-left space-y-3">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                <span class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Número de pedido</span>
+                <span class="font-mono font-bold text-amber-900 text-sm"
+                      th:text="${orderNumber}">PED-20261107-XXXX</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                <span class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Fecha y hora</span>
+                <span class="text-sm font-medium text-stone-700"
+                      th:text="${#temporals.format(orderCreatedAt, 'dd/MM/yyyy HH:mm')}">07/11/2026 11:30</span>
+            </div>
+            <div class="flex items-center justify-between pt-1">
+                <span class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Total facturado</span>
+                <span class="text-xl font-extrabold text-amber-900"
+                      th:text="${#numbers.formatDecimal(orderTotal, 1, 2)} + ' €'">0.00 €</span>
+            </div>
+        </div>
+        <!-- Temporizador de 10 minutos -->
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-2">
+            <p class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Tiempo restante para modificar/cancelar</p>
+            <p id="timer" class="text-4xl font-mono font-extrabold text-amber-800">10:00</p>
+            <p id="timer-expired" class="hidden text-sm text-red-600 font-semibold">
+                ⚠️ El plazo de modificación ha finalizado.
+            </p>
+        </div>
+        <!-- Acciones -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/mis-pedidos"
+               class="px-6 py-3 rounded-xl bg-amber-800 hover:bg-amber-700 text-white font-bold text-sm shadow transition">
+                📦 Ir a Mis Pedidos
+            </a>
+            <a href="/carta"
+               class="px-6 py-3 rounded-xl border border-amber-800 text-amber-800 hover:bg-amber-50 font-bold text-sm transition">
+                🍽️ Volver a la Carta
+            </a>
+        </div>
+    </div>
+</main>
+<footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500">
+    © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio. Todos los derechos reservados.
+</footer>
+<!-- Temporizador JS: cuenta atrás de 10 minutos -->
+<script>
+    let seconds = 600; // 10 minutos
+    const timerEl = document.getElementById('timer');
+    const expiredEl = document.getElementById('timer-expired');
+    const interval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+            clearInterval(interval);
+            timerEl.textContent = '00:00';
+            timerEl.classList.add('text-red-600');
+            expiredEl.classList.remove('hidden');
+            return;
+        }
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        timerEl.textContent = `${m}:${s}`;
+    }, 1000);
+</script>
+</body>
+</html>

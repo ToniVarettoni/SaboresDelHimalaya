@@ -19,7 +19,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                                         Authentication authentication) throws IOException, ServletException {
         for (GrantedAuthority auth : authentication.getAuthorities()) {
             if ("ROLE_CHEF".equals(auth.getAuthority())) {
-                response.sendRedirect("/chef/menu-diario");
+                response.sendRedirect("/chef");
                 return;
             } else if ("ROLE_ADMIN".equals(auth.getAuthority())) {
                 response.sendRedirect("/admin/carta");

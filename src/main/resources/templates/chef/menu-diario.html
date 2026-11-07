@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Menú Diario - Chef | Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-stone-200 pb-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-stone-900">🗓️ Menú Diario</h1>
+            <p class="text-sm text-stone-500 mt-1">Precio fijo: <span class="font-bold text-amber-800">15.00 €</span></p>
+        </div>
+        <a href="/chef" class="text-sm font-medium text-amber-800 hover:text-amber-600 flex items-center space-x-1">
+            <span>←</span><span>Panel Chef</span>
+        </a>
+    </div>
+    <!-- Alertas -->
+    <div th:if="${successMsg}"
+         class="bg-green-50 border border-green-300 text-green-800 text-sm px-5 py-3 rounded-xl font-medium">
+        ✅ <span th:text="${successMsg}"></span>
+    </div>
+    <div th:if="${errorMsg}"
+         class="bg-red-50 border border-red-300 text-red-700 text-sm px-5 py-3 rounded-xl font-medium">
+        ⚠️ <span th:text="${errorMsg}"></span>
+    </div>
+    <!-- Selector de fecha -->
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5">
+        <form method="get" action="/chef/menu-diario" class="flex items-center space-x-4">
+            <label class="text-sm font-semibold text-stone-600">Fecha del menú:</label>
+            <input type="date" name="fecha"
+                   th:value="${selectedDate}"
+                   class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+            <button type="submit"
+                    class="px-4 py-2 rounded-lg bg-stone-700 hover:bg-stone-600 text-white text-sm font-semibold transition">
+                Cargar / Crear
+            </button>
+        </form>
+    </div>
+    <!-- Formulario del menú -->
+    <form th:action="@{/chef/menu-diario}" method="post" th:object="${form}">
+        <input type="hidden" th:field="*{date}" />
+        <div class="space-y-8">
+            <!-- ── ENTRANTES (3 slots) ─────────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-amber-900 text-white px-5 py-3 flex items-center space-x-2">
+                    <span>🥗</span>
+                    <h2 class="font-bold text-sm uppercase tracking-wider">Entrantes — 3 opciones obligatorias</h2>
+                </div>
+                <div class="p-5 space-y-5">
+                    <div th:each="i : ${#numbers.sequence(0, 2)}" class="border border-stone-200 rounded-xl p-4 space-y-3">
+                        <p class="text-xs font-bold text-stone-500 uppercase">Entrante <span th:text="${i + 1}"></span></p>
+                        <!-- Selector de producto existente -->
+                        <div>
+                            <label class="text-xs font-semibold text-stone-600">Elegir de la carta (opcional):</label>
+                            <select th:field="*{entrantes[__${i}__].productId}"
+                                    class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
+                                <option value="">— Plato nuevo (rellenar abajo) —</option>
+                                <option th:each="p : ${products}"
+                                        th:value="${p.id}"
+                                        th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
+                            </select>
+                        </div>
+                        <!-- Plato nuevo -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Nombre (plato nuevo):</label>
+                                <input type="text" th:field="*{entrantes[__${i}__].customName}"
+                                       placeholder="Ej: Sopa de miso especial"
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Descripción:</label>
+                                <input type="text" th:field="*{entrantes[__${i}__].customDescription}"
+                                       placeholder="Ingredientes, alérgenos..."
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PRINCIPALES (3 slots) ──────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-amber-800 text-white px-5 py-3 flex items-center space-x-2">
+                    <span>🍛</span>
+                    <h2 class="font-bold text-sm uppercase tracking-wider">Platos Principales — 3 opciones obligatorias</h2>
+                </div>
+                <div class="p-5 space-y-5">
+                    <div th:each="i : ${#numbers.sequence(0, 2)}" class="border border-stone-200 rounded-xl p-4 space-y-3">
+                        <p class="text-xs font-bold text-stone-500 uppercase">Principal <span th:text="${i + 1}"></span></p>
+                        <div>
+                            <label class="text-xs font-semibold text-stone-600">Elegir de la carta (opcional):</label>
+                            <select th:field="*{principales[__${i}__].productId}"
+                                    class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
+                                <option value="">— Plato nuevo (rellenar abajo) —</option>
+                                <option th:each="p : ${products}"
+                                        th:value="${p.id}"
+                                        th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Nombre (plato nuevo):</label>
+                                <input type="text" th:field="*{principales[__${i}__].customName}"
+                                       placeholder="Ej: Pollo Tikka Masala"
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Descripción:</label>
+                                <input type="text" th:field="*{principales[__${i}__].customDescription}"
+                                       placeholder="Ingredientes, alérgenos..."
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ── POSTRES (2 slots) ──────────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-amber-700 text-white px-5 py-3 flex items-center space-x-2">
+                    <span>🍧</span>
+                    <h2 class="font-bold text-sm uppercase tracking-wider">Postres — 2 opciones obligatorias</h2>
+                </div>
+                <div class="p-5 space-y-5">
+                    <div th:each="i : ${#numbers.sequence(0, 1)}" class="border border-stone-200 rounded-xl p-4 space-y-3">
+                        <p class="text-xs font-bold text-stone-500 uppercase">Postre <span th:text="${i + 1}"></span></p>
+                        <div>
+                            <label class="text-xs font-semibold text-stone-600">Elegir de la carta (opcional):</label>
+                            <select th:field="*{postres[__${i}__].productId}"
+                                    class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
+                                <option value="">— Plato nuevo (rellenar abajo) —</option>
+                                <option th:each="p : ${products}"
+                                        th:value="${p.id}"
+                                        th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Nombre (plato nuevo):</label>
+                                <input type="text" th:field="*{postres[__${i}__].customName}"
+                                       placeholder="Ej: Kheer de arroz"
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-stone-600">Descripción:</label>
+                                <input type="text" th:field="*{postres[__${i}__].customDescription}"
+                                       placeholder="Ingredientes, alérgenos..."
+                                       class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Botón publicar -->
+        <div class="mt-8 flex justify-end">
+            <button type="submit"
+                    class="px-8 py-3 rounded-xl bg-amber-800 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition">
+                🚀 Publicar / Actualizar Menú Diario (15 €)
+            </button>
+        </div>
+    </form>
+</main>
+<footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500">
+    © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio.
+</footer>
+</body>
+</html>

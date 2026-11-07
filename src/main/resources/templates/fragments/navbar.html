@@ -32,7 +32,7 @@
                 <!-- Authenticated Users -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center space-x-3">
                     <div sec:authorize="hasRole('CHEF')">
-                        <a th:href="@{/chef/menu-diario}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
+                        <a th:href="@{/chef}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
                             Panel Chef
                         </a>
                     </div>
