@@ -18,11 +18,11 @@ public class EmailService {
     }
 
     public void sendActivationEmail(String toEmail, String activationLink) {
-        log.info("--------------------------------------------------------------------------------");
-        log.info("ENVÍO DE CORREO DE ACTIVACIÓN");
-        log.info("Destinatario: {}", toEmail);
-        log.info("Enlace de activación: {}", activationLink);
-        log.info("--------------------------------------------------------------------------------");
+        log.info("================================================================================");
+        log.info("✉️  [ENTORNO DE DESARROLLO] CORREO DE ACTIVACIÓN GENERADO");
+        log.info("Para: {}", toEmail);
+        log.info("👉 Enlace de activación: {}", activationLink);
+        log.info("================================================================================");
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -35,10 +35,10 @@ public class EmailService {
                     + "Este enlace expirará en 24 horas.\n"
                     + "Si no solicitó este registro, por favor ignore este mensaje.");
             mailSender.send(message);
+            log.info("✓ Correo enviado exitosamente vía SMTP local.");
         } catch (Exception e) {
-            log.warn("No se pudo conectar con el servidor SMTP para enviar el correo a {}: {}. "
-                    + "El enlace de activación sigue siendo válido en los logs para desarrollo local.",
-                    toEmail, e.getMessage());
+            log.info("ℹ️ Servidor SMTP local no disponible en localhost:1025. "
+                    + "Puede usar directamente el enlace impreso arriba o levantar Mailpit con 'docker compose up -d'.");
         }
     }
 }
