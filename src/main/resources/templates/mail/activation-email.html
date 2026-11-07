@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activa tu cuenta - Sabor del Himalaya</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #fef3c7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #292524;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e7e5e4;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #78350f;
+            padding: 30px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 14px;
+            color: #fde68a;
+        }
+        .body-content {
+            padding: 30px 25px;
+            line-height: 1.6;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1c1917;
+        }
+        .btn-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn-activate {
+            background-color: #b45309;
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+        }
+        .callout {
+            background-color: #f5f5f4;
+            border-left: 4px solid #b45309;
+            padding: 12px 16px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: #57534e;
+        }
+        .url-backup {
+            word-break: break-all;
+            font-size: 12px;
+            color: #78716c;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #fafaf9;
+            border-top: 1px solid #e7e5e4;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #a8a29e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cabecera -->
+        <div class="header">
+            <h1>🏔️ Sabor del Himalaya</h1>
+            <p>Auténtica Gastronomía Nepalí a Domicilio</p>
+        </div>
+
+        <!-- Cuerpo del correo -->
+        <div class="body-content">
+            <div class="greeting">
+                ¡Hola, <span th:text="${recipientName}">Cliente</span>!
+            </div>
+
+            <p>
+                Gracias por registrarte en <strong>Sabor del Himalaya</strong>. Para comenzar a disfrutar de los sabores auténticos del Nepal en tu domicilio, necesitamos que actives tu cuenta confirmando tu correo electrónico.
+            </p>
+
+            <div class="btn-container">
+                <a th:href="${activationUrl}" class="btn-activate" target="_blank">
+                    Activar mi Cuenta
+                </a>
+            </div>
+
+            <div class="callout">
+                ⏳ <strong>Importante:</strong> Este enlace de activación es válido durante las próximas <strong>24 horas</strong>. Si no has sido tú quien solicitó el alta, puedes ignorar este mensaje con total seguridad.
+            </div>
+
+            <div class="url-backup">
+                <p>Si el botón anterior no funciona, copia y pega el siguiente enlace directamente en la barra de tu navegador:</p>
+                <a th:href="${activationUrl}" th:text="${activationUrl}" style="color: #b45309;"></a>
+            </div>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            <p>© 2026 Restaurante Sabor del Himalaya. Todos los derechos reservados.</p>
+            <p>Este correo ha sido generado automáticamente por el sistema de pedidos.</p>
+        </div>
+    </div>
+</body>
+</html>

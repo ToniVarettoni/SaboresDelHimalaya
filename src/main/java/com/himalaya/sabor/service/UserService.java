@@ -56,7 +56,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         String activationLink = baseUrl + "/activar-cuenta?token=" + token;
-        emailService.sendActivationEmail(savedUser.getEmail(), activationLink);
+        emailService.sendActivationEmail(savedUser.getName(), savedUser.getEmail(), activationLink);
 
         return savedUser;
     }
@@ -101,7 +101,7 @@ public class UserService {
                 userRepository.save(user);
 
                 String activationLink = baseUrl + "/activar-cuenta?token=" + token;
-                emailService.sendActivationEmail(user.getEmail(), activationLink);
+                emailService.sendActivationEmail(user.getName(), user.getEmail(), activationLink);
                 return true;
             }
         }
