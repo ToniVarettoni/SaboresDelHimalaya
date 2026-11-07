@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<nav th:fragment="navbar" class="bg-amber-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- Brand -->
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/}" class="text-2xl font-bold tracking-tight hover:text-amber-200 transition">
+                    🏔️ Sabor del Himalaya
+                </a>
+            </div>
+
+            <!-- Links -->
+            <div class="flex items-center space-x-4">
+                <a th:href="@{/carta}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-amber-800 transition">
+                    Carta y Menú
+                </a>
+                <a th:href="@{/carrito}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-amber-800 transition flex items-center space-x-1">
+                    <span>🛒 Carrito</span>
+                </a>
+
+                <!-- Anonymous Users -->
+                <div sec:authorize="isAnonymous()" class="flex items-center space-x-2">
+                    <a th:href="@{/login}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-800 hover:bg-amber-700 transition">
+                        Iniciar Sesión
+                    </a>
+                    <a th:href="@{/registro}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-600 hover:bg-amber-500 transition">
+                        Registrarse
+                    </a>
+                </div>
+
+                <!-- Authenticated Users -->
+                <div sec:authorize="isAuthenticated()" class="flex items-center space-x-3">
+                    <div sec:authorize="hasRole('CHEF')">
+                        <a th:href="@{/chef/menu-diario}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
+                            Panel Chef
+                        </a>
+                    </div>
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/carta}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
+                            Admin Carta
+                        </a>
+                    </div>
+                    <div sec:authorize="hasRole('CLIENT')">
+                        <a th:href="@{/mis-pedidos}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-amber-800 transition">
+                            Mis Pedidos
+                        </a>
+                    </div>
+                    <span class="text-xs text-amber-200" sec:authentication="name"></span>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="px-3 py-2 rounded-md text-sm font-medium bg-red-700 hover:bg-red-600 transition">
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+</html>

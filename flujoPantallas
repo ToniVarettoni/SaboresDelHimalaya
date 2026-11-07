@@ -1,0 +1,54 @@
+1. Catalogación de Pantallas e Interfaces de Usuario
+En esta sección se definen y catalogan las 13 pantallas e interfaces del sistema 'Sabor del Himalaya'. A cada pantalla se le asigna un código único identificativo (P1 a P13) respaldado por sus correspondientes componentes interactivos, historias de usuario asociadas y transiciones de navegación.
+P1 – Página Principal y Catálogo (Home)
+Historias de Usuario asociadas: US4, US7
+Componentes e Interfaz: Cabecera pública con botones Login/Registro y Carrito. Selector/Filtro por categorías. Tarjetas de producto (nombre, imagen, descripción, precio) con botón 'Añadir al Carrito'. Módulo destacado del Menú Diario (15 €).
+Acciones y Transiciones: Clic en 'Registrarse': Navega a P2. Clic en 'Iniciar Sesión': Navega a P4. Clic en 'Añadir al Carrito': Abre panel Carrito (P7).
+P2 – Formulario de Registro de Cliente
+Historias de Usuario asociadas: US1
+Componentes e Interfaz: Formulario de alta con campos obligatorios: Nombre completo, Correo electrónico (login), Contraseña, Dirección de entrega y Teléfono. Botón 'Crear Cuenta'.
+Acciones y Transiciones: Clic en 'Crear Cuenta' (válido): Envía correo de activación y muestra confirmación. Clic en 'Crear Cuenta' (duplicado): Muestra error.
+P3 – Confirmación y Reenvío de Activación de Cuenta
+Historias de Usuario asociadas: US2
+Componentes e Interfaz: Mensaje de confirmación de activación. Bloque de error para enlaces caducados. Formulario secundario con campo Correo electrónico y botón 'Solicitar nuevo enlace de activación'.
+Acciones y Transiciones: Clic en 'Ir a Iniciar Sesión': Navega a P4. Clic en 'Solicitar nuevo enlace': Genera token, reenvía correo y muestra confirmación.
+P4 – Formulario de Inicio de Sesión (Login)
+Historias de Usuario asociadas: US3
+Componentes e Interfaz: Campos Correo electrónico y Contraseña. Botón 'Entrar'. Enlace a Registro (P2).
+Acciones y Transiciones: Entrar (Cliente): Redirige a P1/P10. Entrar (Chef): Redirige a P5. Entrar (Restaurante): Redirige a P12. Entrar (Admin): Redirige a P6/P13.
+P5 – Panel del Chef: Configuración y Edición del Menú Diario
+Historias de Usuario asociadas: US6
+Componentes e Interfaz: Selector de Fecha. 3 desplegables para Entrantes, 3 para Principales y 2 para Postres. Opciones para seleccionar de carta, platos habituales o Registrar Plato Nuevo. Indicador de precio fijo (15 €). Botón 'Publicar / Actualizar Menú Diario'.
+Acciones y Transiciones: Clic en 'Publicar/Actualizar': Guarda/modifica la oferta de 15 € en el sistema y muestra confirmación.
+P6 – Panel de Administración: Gestión de la Carta y Bebidas
+Historias de Usuario asociadas: US5
+Componentes e Interfaz: Tabla interactiva con catálogo de productos (nombre, categoría, descripción, precio, estado). Botón 'Añadir Nuevo Producto'. Botones 'Editar' y 'Desactivar'. Modal de edición.
+Acciones y Transiciones: Clic en 'Guardar Producto': Actualiza el catálogo en la base de datos y refresca la tabla.
+P7 – Carrito de Compra y Configuración de Selección
+Historias de Usuario asociadas: US8
+Componentes e Interfaz: Al añadir Menú Diario: Selector obligatorio de 1 Entrante (de 3), 1 Principal (de 3) y 1 Postre (de 2). Lista de artículos con selector de cantidad (+/-) y botón eliminar. Botón 'Tramitar Pedido'.
+Acciones y Transiciones: Clic en 'Tramitar Pedido' (Autenticado): Navega a P8. Clic en 'Tramitar Pedido' (Anónimo): Redirige a Login (P4).
+P8 – Resumen de Pedido, Envío y Pago
+Historias de Usuario asociadas: US9, US10
+Componentes e Interfaz: Tabla con desglose del pedido e Importe Total Calculado. Campos de Dirección de entrega, Teléfono y Observaciones. Selector de Forma de Pago. Botón 'Modificar Carrito'. Botón 'Confirmar y Pagar Pedido'.
+Acciones y Transiciones: Clic en 'Modificar Carrito': Regresa a P7/P1 para ajustar la compra. Clic en 'Confirmar y Pagar': Registra pedido y navega a P9.
+P9 – Confirmación y Recibo de Pedido
+Historias de Usuario asociadas: US10
+Componentes e Interfaz: Número de pedido único generado y fecha/hora. Resumen de compra. Cuadro destacado con aviso de ventana de 10 minutos y temporizador dinámico. Botón 'Ir a Mis Pedidos'.
+Acciones y Transiciones: Clic en 'Ir a Mis Pedidos': Navega a P10.
+P10 – Histórico y Seguimiento de Pedidos (Cliente)
+Historias de Usuario asociadas: US11, US12, US13
+Componentes e Interfaz: Tabla de historial de pedidos. Indicador visual de estado. Para pedidos <= 10 min: Botones 'Modificar Pedido' y 'Cancelar Pedido'. Para pedidos > 10 min: Botones desactivados.
+Acciones y Transiciones: Clic en 'Modificar Pedido' (<=10 min): Navega a P11. Clic en 'Cancelar Pedido' (<=10 min): Abre modal de confirmación y cambia estado a Cancelado.
+P11 – Modificación de Pedido Activo
+Historias de Usuario asociadas: US12
+Componentes e Interfaz: Editor de líneas de pedido y campo editable de Dirección. Recálculo en tiempo real del nuevo Importe Total. Botón 'Guardar Cambios'.
+Acciones y Transiciones: Clic en 'Guardar Cambios' (<=10 min): Actualiza pedido, recalcula total y regresa a P10.
+P12 – Panel de Gestión de Pedidos (Restaurante)
+Historias de Usuario asociadas: US14
+Componentes e Interfaz: Lista de pedidos del día ordenados por hora. Ficha de detalle. Selector/Botones de estado: 'En preparación', 'En reparto', 'Entregado'.
+Acciones y Transiciones: Clic en 'Cambiar Estado': Actualiza base de datos y refleja el nuevo estado en la vista del cliente (P10).
+P13 – Informe de Facturación Diaria (Dueño/Administrador)
+Historias de Usuario asociadas: US15
+Componentes e Interfaz: Selector de Fecha. Tabla con desglose de pedidos completados del día. Bloque resumen con campos calculados: Número Total de Pedidos del Día e Importe Total Facturado en el Día (€). Botón 'Consultar Informe'.
+Acciones y Transiciones: Clic en 'Consultar Informe': Ejecuta el cálculo del sumatorio y presenta los totales financieros en pantalla.

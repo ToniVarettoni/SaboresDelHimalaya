@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <main class="flex-grow flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-md border border-stone-200">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-amber-900">Iniciar Sesión</h1>
+                <p class="text-sm text-stone-600 mt-1">Acceda a su cuenta para tramitar sus pedidos a domicilio</p>
+            </div>
+
+            <!-- Error Messages -->
+            <div th:if="${errorMessage}" class="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
+                <span th:text="${errorMessage}"></span>
+                <div th:if="${param.unactivated}" class="mt-2 text-xs">
+                    <a th:href="@{/activar-cuenta}" class="font-medium underline hover:text-red-900">
+                        ¿Desea solicitar un nuevo enlace de activación?
+                    </a>
+                </div>
+            </div>
+
+            <!-- Info / Logout Messages -->
+            <div th:if="${infoMessage}" class="mb-4 p-4 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-sm">
+                <span th:text="${infoMessage}"></span>
+            </div>
+
+            <form th:action="@{/login}" method="post" class="space-y-4">
+                <!-- Correo electrónico (login) -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-stone-700">Correo electrónico</label>
+                    <input type="email" id="email" name="email"
+                           class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 shadow-sm focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600 text-sm"
+                           placeholder="usuario@ejemplo.com" required autofocus>
+                </div>
+
+                <!-- Contraseña -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-stone-700">Contraseña</label>
+                    <input type="password" id="password" name="password"
+                           class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 shadow-sm focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600 text-sm"
+                           placeholder="••••••••" required>
+                </div>
+
+                <!-- Botón Entrar -->
+                <div class="pt-2">
+                    <button type="submit"
+                            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-amber-800 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-600 transition">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-stone-600">
+                <span>¿Aún no tiene cuenta?</span>
+                <a th:href="@{/registro}" class="font-medium text-amber-800 hover:text-amber-700 underline ml-1">
+                    Registrarse
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-stone-100 border-t border-stone-200 py-4 text-center text-xs text-stone-500">
+        © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio
+    </footer>
+
+</body>
+</html>
