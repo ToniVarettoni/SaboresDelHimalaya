@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Carta | Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-stone-800 min-h-screen flex flex-col">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
+    <!-- Header del panel -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
+        <div>
+            <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Panel de Administración</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 mt-1">Gestión de la Carta y Bebidas</h1>
+            <p class="text-xs text-stone-500 mt-1">Alta, edición, modificación de precios y baja lógica de platos y bebidas</p>
+        </div>
+        <div>
+            <button type="button" onclick="document.getElementById('modal-nuevo-producto').classList.remove('hidden')"
+                    class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-800 hover:bg-amber-700 text-white font-semibold text-sm shadow-sm transition">
+                <span class="mr-1.5">+</span> Añadir Nuevo Producto
+            </button>
+        </div>
+    </div>
+    <!-- Mensajes Flash de Notificación -->
+    <div th:if="${successMessage}" class="p-4 rounded-md bg-green-50 border border-green-200 text-green-700 text-sm">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
+        <span th:text="${errorMessage}"></span>
+    </div>
+    <!-- TABLA DEL CATÁLOGO (US5 - P6) -->
+    <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-stone-200 text-left text-sm">
+                <thead class="bg-stone-100 text-stone-600 font-semibold text-xs uppercase tracking-wider">
+                <tr>
+                    <th scope="col" class="px-6 py-3.5">Plato / Bebida</th>
+                    <th scope="col" class="px-6 py-3.5">Categoría</th>
+                    <th scope="col" class="px-6 py-3.5">Descripción de Ingredientes</th>
+                    <th scope="col" class="px-6 py-3.5 text-right">Precio</th>
+                    <th scope="col" class="px-6 py-3.5 text-center">Estado</th>
+                    <th scope="col" class="px-6 py-3.5 text-center">Acciones</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100 bg-white">
+                <tr th:each="prod : ${products}" class="hover:bg-amber-50/50 transition">
+                    <td class="px-6 py-4 font-semibold text-stone-900 whitespace-nowrap" th:text="${prod.name}">
+                        Samosa Nepalí
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="bg-stone-100 text-stone-700 px-2.5 py-1 rounded text-xs font-medium" th:text="${prod.category.name}">
+                                    Entrantes
+                                </span>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-stone-600 max-w-xs truncate" th:text="${prod.description}" th:title="${prod.description}">
+                        Rellenas de verduras y especias
+                    </td>
+                    <td class="px-6 py-4 text-right font-bold text-stone-900 whitespace-nowrap" th:text="${#numbers.formatDecimal(prod.price, 1, 2) + ' €'}">
+                        4.50 €
+                    </td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <span th:if="${prod.status.name() == 'ACTIVO'}" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                    Activo
+                                </span>
+                        <span th:if="${prod.status.name() == 'INACTIVO'}" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                    Inactivo
+                                </span>
+                        <span th:if="${prod.status.name() == 'DESCATALOGADO'}" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                    Descatalogado
+                                </span>
+                    </td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap text-xs space-x-2">
+                        <!-- Botón Editar -->
+                        <a th:href="@{'/admin/carta/editar/' + ${prod.id}}"
+                           class="inline-block px-3 py-1.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold transition">
+                            Editar
+                        </a>
+                        <!-- Acciones Rápidas de Estado / Baja Lógica -->
+                        <form th:if="${prod.status.name() == 'ACTIVO'}" th:action="@{'/admin/carta/' + ${prod.id} + '/estado'}" method="post" class="inline">
+                            <input type="hidden" name="status" value="INACTIVO" />
+                            <button type="submit" class="px-3 py-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold transition"
+                                    onclick="return confirm('¿Desea cambiar el estado a INACTIVO? (No será visible en la carta de clientes)');">
+                                Desactivar
+                            </button>
+                        </form>
+                        <form th:if="${prod.status.name() != 'ACTIVO'}" th:action="@{'/admin/carta/' + ${prod.id} + '/estado'}" method="post" class="inline">
+                            <input type="hidden" name="status" value="ACTIVO" />
+                            <button type="submit" class="px-3 py-1.5 rounded bg-green-100 hover:bg-green-200 text-green-800 font-semibold transition">
+                                Activar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL PARA AÑADIR NUEVO PRODUCTO (flujoPantallas P6) -->
+<div id="modal-nuevo-producto" th:classappend="${openModal == true} ? '' : 'hidden'"
+     class="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 relative">
+        <div class="flex items-center justify-between pb-3 border-b border-stone-200">
+            <h3 class="text-xl font-bold text-amber-900">Añadir Nuevo Plato o Bebida</h3>
+            <button type="button" onclick="document.getElementById('modal-nuevo-producto').classList.add('hidden')"
+                    class="text-stone-400 hover:text-stone-600 text-2xl font-bold">
+                &times;
+            </button>
+        </div>
+        <form th:action="@{/admin/carta}" th:object="${productDto}" method="post" class="mt-4 space-y-4">
+            <!-- Nombre -->
+            <div>
+                <label for="name" class="block text-xs font-semibold text-stone-700 uppercase tracking-wide">Nombre del Producto</label>
+                <input type="text" id="name" th:field="*{name}"
+                       class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-600 focus:ring-1 focus:ring-amber-600"
+                       placeholder="Ej. Kukhura Ko Masala" required />
+                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="mt-1 text-xs text-red-600"></p>
+            </div>
+            <!-- Categoría -->
+            <div>
+                <label for="categoryId" class="block text-xs font-semibold text-stone-700 uppercase tracking-wide">Categoría</label>
+                <select id="categoryId" th:field="*{categoryId}"
+                        class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-600 focus:ring-1 focus:ring-amber-600" required>
+                    <option value="">-- Seleccione Categoría --</option>
+                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Entrantes</option>
+                </select>
+                <p th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}" class="mt-1 text-xs text-red-600"></p>
+            </div>
+            <!-- Descripción detallada de ingredientes -->
+            <div>
+                <label for="description" class="block text-xs font-semibold text-stone-700 uppercase tracking-wide">Descripción e Ingredientes</label>
+                <textarea id="description" th:field="*{description}" rows="3"
+                          class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-600 focus:ring-1 focus:ring-amber-600"
+                          placeholder="Detalle de ingredientes principales, especias, alérgenos..."></textarea>
+                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="mt-1 text-xs text-red-600"></p>
+            </div>
+            <!-- Precio y Estado -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="price" class="block text-xs font-semibold text-stone-700 uppercase tracking-wide">Precio (€)</label>
+                    <input type="number" step="0.01" min="0.01" id="price" th:field="*{price}"
+                           class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-600 focus:ring-1 focus:ring-amber-600"
+                           placeholder="10.50" required />
+                    <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="mt-1 text-xs text-red-600"></p>
+                </div>
+                <div>
+                    <label for="status" class="block text-xs font-semibold text-stone-700 uppercase tracking-wide">Estado Inicial</label>
+                    <select id="status" th:field="*{status}"
+                            class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-600 focus:ring-1 focus:ring-amber-600">
+                        <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.name()}">ACTIVO</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Botones -->
+            <div class="pt-4 flex justify-end space-x-3 border-t border-stone-100">
+                <button type="button" onclick="document.getElementById('modal-nuevo-producto').classList.add('hidden')"
+                        class="px-4 py-2 rounded-md border border-stone-300 text-stone-700 text-sm font-medium hover:bg-stone-50 transition">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 rounded-md bg-amber-800 hover:bg-amber-700 text-white text-sm font-bold shadow-sm transition">
+                    Guardar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<footer class="bg-stone-100 border-t border-stone-200 py-4 text-center text-xs text-stone-500">
+    © 2026 Sabor del Himalaya - Módulo de Administración de Carta
+</footer>
+</body>
+</html>
