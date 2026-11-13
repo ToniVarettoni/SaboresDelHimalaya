@@ -108,9 +108,13 @@ public class AdminCartaController {
     public String changeProductStatus(@PathVariable("id") Long id,
                                       @RequestParam("status") ProductStatus status,
                                       RedirectAttributes redirectAttributes) {
-        Product product = productService.updateStatus(id, status);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "El estado de '" + product.getName() + "' ha cambiado a " + status.name());
+        try {
+            Product product = productService.updateStatus(id, status);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "El estado de '" + product.getName() + "' ha cambiado a " + status.name());
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/admin/carta";
     }
 }

@@ -1,4 +1,5 @@
 spring:
   mail:
-    username: tomasvareta@gmail.com
-    password: ldojlchbydbogbgm
+    # Definir SPRING_MAIL_USERNAME y SPRING_MAIL_PASSWORD
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}

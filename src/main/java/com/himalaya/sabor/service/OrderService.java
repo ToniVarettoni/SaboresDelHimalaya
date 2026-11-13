@@ -2,6 +2,7 @@ package com.himalaya.sabor.service;
 
 import com.himalaya.sabor.dto.OrderConfirmDto;
 import com.himalaya.sabor.model.*;
+import com.himalaya.sabor.repository.DailyMenuRepository;
 import com.himalaya.sabor.repository.OrderRepository;
 import com.himalaya.sabor.repository.ProductRepository;
 import com.himalaya.sabor.repository.UserRepository;
@@ -25,6 +26,9 @@ public class OrderService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private DailyMenuRepository dailyMenuRepository;
 
     /**
      * Convierte los ítems del carrito en un pedido persistido.
@@ -62,7 +66,11 @@ public class OrderService {
             }
             // Para ítems de menú diario, itemDetailsJson guarda el nombre
             if (cartItem.getType() == CartItem.ItemType.DAILY_MENU) {
-                oi.setItemDetailsJson("{\"name\":\"" + cartItem.getName() + "\"}");
+                if (cartItem.getDailyMenuId() != null) {
+                    oi.setDailyMenu(dailyMenuRepository.findById(cartItem.getDailyMenuId()).orElse(null));
+                }
+                String detalle = cartItem.getDetails() != null ? cartItem.getDetails() : "";
+                oi.setItemDetailsJson("{\"name\":\"" + cartItem.getName() + "\",\"platos\":\"" + detalle.replace("\"", "'") + "\"}");
             }
             order.addItem(oi);
         }

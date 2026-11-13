@@ -56,6 +56,7 @@
                                   class="bg-stone-100 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Plato</span>
                             <span class="font-medium text-stone-900 text-sm" th:text="${item.name}">Nombre</span>
                         </div>
+                        <p th:if="${item.details != null}" class="mt-1 text-xs text-stone-500" th:text="${item.details}">Platos elegidos</p>
                     </td>
                     <!-- Precio unitario -->
                     <td class="py-4 px-5 text-center text-sm font-semibold text-amber-800"

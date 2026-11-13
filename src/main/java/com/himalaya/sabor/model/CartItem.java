@@ -24,6 +24,8 @@ public class CartItem {
     private String name;            // nombre a mostrar (producto o customName)
     private BigDecimal unitPrice;
     private int quantity = 1;
+    private Long dailyMenuId;        // menú diario al que pertenece la línea (type == DAILY_MENU)
+    private String details;          // platos elegidos del menú diario
 
     public CartItem() {}
 
@@ -50,6 +52,11 @@ public class CartItem {
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public Long getDailyMenuId() { return dailyMenuId; }
+    public void setDailyMenuId(Long dailyMenuId) { this.dailyMenuId = dailyMenuId; }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 
     public BigDecimal getSubtotal() {
         return unitPrice.multiply(BigDecimal.valueOf(quantity));

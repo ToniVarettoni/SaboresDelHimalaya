@@ -47,7 +47,7 @@ class AuthIntegrationTests {
 
     @BeforeEach
     void setUp() {
-        // Aseguramos usuario activo para pruebas
+        // Usuario activo para pruebas
         if (userRepository.findByEmail("cliente.activo@himalaya.com").isEmpty()) {
             User activeUser = new User(
                     "Cliente Activo",
@@ -61,7 +61,7 @@ class AuthIntegrationTests {
             userRepository.save(activeUser);
         }
 
-        // Aseguramos usuario pendiente para pruebas
+        // Usuario pendiente para pruebas
         if (userRepository.findByEmail("cliente.pendiente@himalaya.com").isEmpty()) {
             User pendingUser = new User(
                     "Cliente Pendiente",
@@ -251,13 +251,13 @@ class AuthIntegrationTests {
     }
 
     @Test
-    @DisplayName("US3: Credenciales de Chef redirigen a /chef/menu-diario")
+    @DisplayName("US3: Credenciales de Chef redirigen al panel del chef (/chef)")
     void loginChefSuccess() throws Exception {
         mockMvc.perform(formLogin("/login")
                         .user("email", "chef@himalaya.com")
                         .password("chef123"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/chef/menu-diario"))
+                .andExpect(redirectedUrl("/chef"))
                 .andExpect(authenticated().withUsername("chef@himalaya.com"));
     }
 }

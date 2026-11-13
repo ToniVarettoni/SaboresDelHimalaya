@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Menú del día - Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="flex-grow max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-6">
+    <div class="flex items-center justify-between border-b border-stone-200 pb-4">
+        <h1 class="text-3xl font-extrabold text-stone-900">Menú del día</h1>
+        <a href="/carta" class="text-sm font-medium text-amber-800 hover:text-amber-600 transition">← Volver a la carta</a>
+    </div>
+
+    <div th:if="${menuError}" class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm" th:text="${menuError}">Error</div>
+
+    <div th:if="${dailyMenu == null}" class="p-6 rounded-xl bg-stone-100 text-stone-600 text-sm text-center">
+        El menú del día no está disponible hoy.
+    </div>
+
+    <form th:if="${dailyMenu != null}" th:action="@{/carrito/configurar-menu}" method="post"
+          class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 space-y-6">
+        <p class="text-sm text-stone-600">
+            Elige un entrante, un plato principal y un postre. El menú cuesta
+            <span class="font-semibold text-amber-800" th:text="${#numbers.formatDecimal(dailyMenu.price, 1, 2)} + ' €'">15.00 €</span>.
+        </p>
+
+        <fieldset class="space-y-2">
+            <legend class="font-semibold text-stone-900">Entrante</legend>
+            <label th:each="item : ${entrantes}" class="flex items-center space-x-2 text-sm">
+                <input type="radio" name="entranteId" th:value="${item.id}" required />
+                <span th:text="${item.displayName}">Entrante</span>
+            </label>
+        </fieldset>
+
+        <fieldset class="space-y-2">
+            <legend class="font-semibold text-stone-900">Plato principal</legend>
+            <label th:each="item : ${principales}" class="flex items-center space-x-2 text-sm">
+                <input type="radio" name="principalId" th:value="${item.id}" required />
+                <span th:text="${item.displayName}">Principal</span>
+            </label>
+        </fieldset>
+
+        <fieldset class="space-y-2">
+            <legend class="font-semibold text-stone-900">Postre</legend>
+            <label th:each="item : ${postres}" class="flex items-center space-x-2 text-sm">
+                <input type="radio" name="postreId" th:value="${item.id}" required />
+                <span th:text="${item.displayName}">Postre</span>
+            </label>
+        </fieldset>
+
+        <div class="flex items-center justify-between pt-2">
+            <label class="text-sm">Cantidad
+                <input type="number" name="quantity" value="1" min="1" max="20"
+                       class="ml-2 w-16 rounded border border-stone-300 px-2 py-1 text-xs text-center" />
+            </label>
+            <button type="submit"
+                    class="px-6 py-2 rounded-lg bg-amber-800 hover:bg-amber-700 text-white text-sm font-semibold shadow transition">
+                Añadir al carrito
+            </button>
+        </div>
+    </form>
+</main>
+
+<footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500">
+    © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio. Todos los derechos reservados.
+</footer>
+</body>
+</html>

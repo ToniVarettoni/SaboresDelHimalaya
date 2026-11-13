@@ -16,8 +16,11 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final com.himalaya.sabor.repository.DailyMenuItemRepository dailyMenuItemRepository;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository,
+                          com.himalaya.sabor.repository.DailyMenuItemRepository dailyMenuItemRepository) {
+        this.dailyMenuItemRepository = dailyMenuItemRepository;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
     }
@@ -80,6 +83,12 @@ public class ProductService {
     @Transactional
     public Product updateStatus(Long id, ProductStatus newStatus) {
         Product product = getProductById(id);
+        // D-13: un plato que está en el menú del día (hoy o fechas posteriores) no se puede dar de baja
+        if (newStatus != ProductStatus.ACTIVO
+                && dailyMenuItemRepository.existsByProductIdAndDailyMenuDateGreaterThanEqual(id, java.time.LocalDate.now())) {
+            throw new IllegalStateException("No se puede dar de baja '" + product.getName()
+                    + "': forma parte del menú del día. Sustitúyelo primero en el menú.");
+        }
         product.setStatus(newStatus);
         return productRepository.save(product);
     }

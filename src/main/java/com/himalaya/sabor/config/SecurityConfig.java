@@ -50,7 +50,6 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/",
                     "/carta",
-                    "/carrito/**",
                     "/registro",
                     "/activar-cuenta",
                     "/reenviar-activacion",
