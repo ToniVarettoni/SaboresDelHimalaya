@@ -36,9 +36,12 @@
                             Panel Chef
                         </a>
                     </div>
-                    <div sec:authorize="hasRole('ADMIN')">
+                    <div sec:authorize="hasRole('ADMIN')" class="flex items-center space-x-2">
                         <a th:href="@{/admin/carta}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
                             Admin Carta
+                        </a>
+                        <a th:href="@{/admin/facturacion}" class="px-3 py-2 rounded-md text-sm font-medium bg-amber-700 hover:bg-amber-600 transition">
+                            📊 Facturación
                         </a>
                     </div>
                     <div sec:authorize="hasRole('CLIENT')">

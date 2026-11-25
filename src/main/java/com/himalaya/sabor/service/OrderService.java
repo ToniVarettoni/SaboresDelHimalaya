@@ -232,6 +232,45 @@ public class OrderService {
         return saved;
     }
 
+    /**
+     * US15 (CA15.2): Obtiene todos los pedidos completados (ENTREGADO) de una fecha determinada.
+     */
+    @Transactional(readOnly = true)
+    public List<Order> getCompletedOrdersByDate(java.time.LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(java.time.LocalTime.MAX);
+        return orderRepository.findByStatusAndCreatedAtBetweenOrderByCreatedAtAsc(
+                OrderStatus.ENTREGADO, start, end);
+    }
+
+    /**
+     * US15: Devuelve un mapa ordenado cronológicamente con la cantidad de pedidos completados
+     * por fecha para los últimos {@code days} días hasta hoy.
+     */
+    @Transactional(readOnly = true)
+    public Map<java.time.LocalDate, Long> getDailyCompletedOrderCounts(int days) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate startDay = today.minusDays(Math.max(1, days) - 1L);
+
+        List<Order> orders = orderRepository.findByStatusAndCreatedAtBetweenOrderByCreatedAtAsc(
+                OrderStatus.ENTREGADO,
+                startDay.atStartOfDay(),
+                today.atTime(java.time.LocalTime.MAX)
+        );
+
+        Map<java.time.LocalDate, Long> grouped = orders.stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getCreatedAt().toLocalDate(),
+                        Collectors.counting()
+                ));
+
+        Map<java.time.LocalDate, Long> result = new java.util.LinkedHashMap<>();
+        for (java.time.LocalDate d = startDay; !d.isAfter(today); d = d.plusDays(1)) {
+            result.put(d, grouped.getOrDefault(d, 0L));
+        }
+        return result;
+    }
+
     private String generateOrderNumber() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         int random = ThreadLocalRandom.current().nextInt(1000, 9999);

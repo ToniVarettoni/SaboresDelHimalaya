@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Informe de Facturación Diaria - Sabor del Himalaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+
+        <!-- Encabezado -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 pb-4 gap-3">
+            <div>
+                <h1 class="text-3xl font-extrabold text-stone-900">📊 Informe de Facturación Diaria</h1>
+                <p class="text-sm text-stone-500 mt-1">
+                    Evolución de pedidos completados y desglose financiero por fecha
+                </p>
+            </div>
+            <a href="/admin/carta"
+               class="text-sm font-medium text-amber-800 hover:text-amber-600 transition flex items-center space-x-1">
+                <span>←</span><span>Volver a Admin Carta</span>
+            </a>
+        </div>
+
+        <!-- GRÁFICO POR DEFECTO: Eje X = Fechas, Eje Y = Cantidad de Pedidos -->
+        <section class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 space-y-5">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-stone-100 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-stone-900">Pedidos completados por día</h2>
+                    <p class="text-xs text-stone-500">
+                        Mostrando los últimos <strong th:text="${dias}">14</strong> días. Haz clic en una barra para ver el detalle de ese día.
+                    </p>
+                </div>
+
+                <!-- Controles para estirar o contraer el rango histórico -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-stone-500 mr-1">Historial:</span>
+                    <a th:each="preset : ${ {7, 14, 30, 60, 90} }"
+                       th:href="@{/admin/facturacion(fecha=${selectedDate}, dias=${preset})}"
+                       th:text="${preset} + ' días'"
+                       th:classappend="${dias == preset} ? 'bg-amber-800 text-white shadow-sm' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'"
+                       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition">14 días</a>
+
+                    <form method="get" action="/admin/facturacion" class="flex items-center space-x-2 ml-2">
+                        <input type="hidden" name="fecha" th:value="${selectedDate}" />
+                        <input id="dias-slider" type="range" name="dias" min="3" max="90"
+                               th:value="${dias}"
+                               onchange="this.form.submit()"
+                               oninput="document.getElementById('dias-val').textContent = this.value + 'd'"
+                               class="w-24 accent-amber-800 cursor-pointer" title="Ajustar días hacia atrás" />
+                        <span id="dias-val" class="text-xs font-mono font-bold text-amber-900 w-8" th:text="${dias} + 'd'">14d</span>
+                    </form>
+                </div>
+            </div>
+
+            <div class="relative h-72 w-full">
+                <canvas id="billingChart"></canvas>
+            </div>
+        </section>
+
+        <!-- SELECTOR DE FECHA Y DETALLE DEL DÍA (CA15.1, CA15.2, CA15.3) -->
+        <section class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-stone-900">
+                        Detalle del día
+                        <span class="text-amber-900" th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}">25/11/2026</span>
+                    </h2>
+                    <p class="text-xs text-stone-500">Consulta los pedidos completados y la facturación de una fecha concreta</p>
+                </div>
+
+                <form method="get" action="/admin/facturacion" class="flex flex-wrap items-center gap-3">
+                    <input type="hidden" name="dias" th:value="${dias}" />
+                    <label for="fecha" class="text-xs font-semibold text-stone-600 uppercase">Fecha:</label>
+                    <input id="fecha" type="date" name="fecha" th:value="${selectedDate}"
+                           class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                    <button type="submit"
+                            class="px-5 py-2 rounded-lg bg-amber-800 hover:bg-amber-700 text-white text-sm font-semibold shadow-sm transition">
+                        Consultar Informe
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bloques resumen calculados (CA15.2 / CA15.3) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-stone-500 uppercase tracking-wide">Número Total de Pedidos del Día</p>
+                        <p class="text-4xl font-extrabold text-stone-900 mt-2" th:text="${totalOrdersCount}">0</p>
+                    </div>
+                    <span class="text-4xl">📦</span>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-stone-500 uppercase tracking-wide">Importe Total Facturado en el Día</p>
+                        <p th:if="${totalOrdersCount == 0}" class="text-4xl font-extrabold text-amber-900 mt-2">0 €</p>
+                        <p th:unless="${totalOrdersCount == 0}" class="text-4xl font-extrabold text-amber-900 mt-2"
+                           th:text="${#numbers.formatDecimal(totalBilled, 1, 2)} + ' €'">0.00 €</p>
+                    </div>
+                    <span class="text-4xl">💶</span>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay facturación en la fecha (CA15.3) -->
+            <div th:if="${#lists.isEmpty(orders)}"
+                 class="bg-white rounded-2xl shadow-sm border border-stone-200 p-10 text-center space-y-2">
+                <p class="text-4xl">📭</p>
+                <p class="text-base font-semibold text-stone-700">No hay facturación registrada para la fecha seleccionada</p>
+            </div>
+
+            <!-- Tabla de pedidos completados del día (CA15.2) -->
+            <div th:unless="${#lists.isEmpty(orders)}"
+                 class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-amber-900 text-white px-5 py-3">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider">Pedidos completados del día</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-stone-100">
+                        <thead class="bg-stone-50">
+                            <tr>
+                                <th class="py-3 px-5 text-left text-xs font-semibold text-stone-500 uppercase">Nº Pedido</th>
+                                <th class="py-3 px-5 text-left text-xs font-semibold text-stone-500 uppercase">Cliente</th>
+                                <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Hora</th>
+                                <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Pago</th>
+                                <th class="py-3 px-5 text-right text-xs font-semibold text-stone-500 uppercase">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            <tr th:each="order : ${orders}" class="hover:bg-amber-50/50 transition">
+                                <td class="py-3.5 px-5 font-mono font-bold text-sm text-amber-900"
+                                    th:text="${order.orderNumber}">PED-XXXX</td>
+                                <td class="py-3.5 px-5 text-sm font-medium text-stone-800"
+                                    th:text="${order.user.name}">Cliente</td>
+                                <td class="py-3.5 px-5 text-center text-sm text-stone-600"
+                                    th:text="${#temporals.format(order.createdAt, 'HH:mm')}">12:30</td>
+                                <td class="py-3.5 px-5 text-center text-xs font-semibold text-stone-600"
+                                    th:text="${order.paymentMethod}">TARJETA</td>
+                                <td class="py-3.5 px-5 text-right text-sm font-bold text-stone-900"
+                                    th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)} + ' €'">0.00 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500 mt-10">
+        © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio. Todos los derechos reservados.
+    </footer>
+
+    <script th:inline="javascript">
+        const labels = /*[[${chartLabels}]]*/ [];
+        const isoDates = /*[[${chartIsoDates}]]*/ [];
+        const counts = /*[[${chartCounts}]]*/ [];
+        const selectedIso = /*[[${selectedDate.toString()}]]*/ '';
+        const currentDays = /*[[${dias}]]*/ 14;
+
+        const bgColors = isoDates.map(d => d === selectedIso ? 'rgba(120, 53, 15, 0.92)' : 'rgba(217, 119, 6, 0.65)');
+        const borderColors = isoDates.map(d => d === selectedIso ? 'rgb(120, 53, 15)' : 'rgb(180, 83, 9)');
+
+        const ctx = document.getElementById('billingChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pedidos completados',
+                    data: counts,
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const clickedDate = isoDates[idx];
+                        if (clickedDate) {
+                            window.location.href = '/admin/facturacion?fecha=' + clickedDate + '&dias=' + currentDays;
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de pedidos'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Fecha'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => 'Fecha: ' + isoDates[items[0].dataIndex],
+                            label: (item) => ' Pedidos completados: ' + item.parsed.y
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
