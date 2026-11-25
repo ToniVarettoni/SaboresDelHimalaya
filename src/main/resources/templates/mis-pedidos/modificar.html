@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Modificar Pedido ' + ${order.orderNumber} + ' - Sabor del Himalaya'">Modificar Pedido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-6">
+
+        <!-- Cabecera -->
+        <div class="flex items-center justify-between border-b border-stone-200 pb-4">
+            <div>
+                <a th:href="@{'/mis-pedidos/' + ${order.id}}" class="text-xs font-semibold text-amber-800 hover:underline">← Volver al detalle</a>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 mt-1">
+                    ✏️ Modificar Pedido <span class="font-mono text-amber-900" th:text="${order.orderNumber}">PED-XXXX</span>
+                </h1>
+            </div>
+            <span class="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-full">
+                ⏱️ Quedan <span th:text="${order.remainingModificationMinutes}"></span> min
+            </span>
+        </div>
+
+        <div th:if="${errorMsg}"
+             class="bg-red-50 border border-red-300 text-red-700 text-sm px-5 py-3 rounded-xl font-medium">
+            ⚠️ <span th:text="${errorMsg}"></span>
+        </div>
+
+        <form th:action="@{'/mis-pedidos/' + ${order.id} + '/modificar'}" method="post" th:object="${modifyDto}" class="space-y-6">
+
+            <!-- Editor de líneas de pedido (P11) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-amber-900 text-white px-5 py-3">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider">Artículos actuales (usa 0 para quitar un artículo)</h2>
+                </div>
+                <table class="min-w-full divide-y divide-stone-100">
+                    <thead class="bg-stone-50">
+                        <tr>
+                            <th class="py-3 px-5 text-left text-xs font-semibold text-stone-500 uppercase">Producto / Menú</th>
+                            <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Precio unit.</th>
+                            <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Cantidad</th>
+                            <th class="py-3 px-5 text-right text-xs font-semibold text-stone-500 uppercase">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        <tr th:each="item, stat : ${order.items}" class="order-item-row">
+                            <td class="py-3.5 px-5">
+                                <input type="hidden" th:name="|items[${stat.index}].orderItemId|" th:value="${item.id}" />
+                                <p class="font-semibold text-stone-900 text-sm" th:text="${item.displayName}">Nombre</p>
+                                <p th:if="${item.displayDetails != null and !#strings.isEmpty(item.displayDetails)}"
+                                   class="text-xs text-stone-500" th:text="${item.displayDetails}"></p>
+                            </td>
+                            <td class="py-3.5 px-5 text-center text-sm text-stone-700"
+                                th:text="${#numbers.formatDecimal(item.unitPrice, 1, 2)} + ' €'">0.00 €</td>
+                            <td class="py-3.5 px-5 text-center">
+                                <input type="number" min="0" max="20"
+                                       th:name="|items[${stat.index}].quantity|"
+                                       th:value="${item.quantity}"
+                                       th:attr="data-price=${item.unitPrice}"
+                                       oninput="recalculateTotal()"
+                                       class="qty-input w-20 border border-stone-300 rounded-lg px-2 py-1 text-sm text-center focus:ring-amber-500 focus:border-amber-500" />
+                            </td>
+                            <td class="py-3.5 px-5 text-right text-sm font-bold text-stone-900 row-subtotal"
+                                th:text="${#numbers.formatDecimal(item.subtotal, 1, 2)} + ' €'">0.00 €</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Añadir producto extra de la carta -->
+                <div class="p-5 bg-stone-50 border-t border-stone-200 space-y-2">
+                    <label class="block text-xs font-semibold text-stone-600 uppercase">¿Añadir otro plato de la carta? (opcional)</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <select id="addProductSelect" th:field="*{addProductId}" onchange="recalculateTotal()"
+                                class="flex-grow border border-stone-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-amber-500 focus:border-amber-500">
+                            <option value="" data-price="0">— No añadir más productos —</option>
+                            <option th:each="p : ${activeProducts}"
+                                    th:value="${p.id}"
+                                    th:attr="data-price=${p.price}"
+                                    th:text="${p.name + ' (' + #numbers.formatDecimal(p.price, 1, 2) + ' €)'}">Producto</option>
+                        </select>
+                        <input id="addProductQty" type="number" th:field="*{addQuantity}" min="1" max="20"
+                               oninput="recalculateTotal()"
+                               class="w-24 border border-stone-300 rounded-lg px-3 py-2 text-sm text-center bg-white" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dirección, teléfono y notas -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 space-y-4">
+                <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wider border-b border-stone-100 pb-2">Datos de entrega</h2>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Dirección de entrega *</label>
+                    <textarea th:field="*{deliveryAddress}" rows="2"
+                              class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500"></textarea>
+                    <p th:if="${#fields.hasErrors('deliveryAddress')}" th:errors="*{deliveryAddress}" class="text-red-600 text-xs mt-1"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Teléfono *</label>
+                        <input type="tel" th:field="*{phone}"
+                               class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                        <p th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="text-red-600 text-xs mt-1"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Observaciones</label>
+                        <input type="text" th:field="*{notes}"
+                               class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recálculo en tiempo real y guardar cambios -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <p class="text-xs text-stone-500 uppercase font-semibold">Nuevo importe total estimado</p>
+                    <p id="live-total" class="text-3xl font-extrabold text-amber-900"
+                       th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)} + ' €'">0.00 €</p>
+                </div>
+                <div class="flex gap-3">
+                    <a th:href="@{'/mis-pedidos/' + ${order.id}}"
+                       class="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-semibold transition">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-700 text-white text-sm font-bold shadow transition">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500 mt-10">
+        © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio. Todos los derechos reservados.
+    </footer>
+
+    <script>
+        function recalculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.order-item-row').forEach(row => {
+                const input = row.querySelector('.qty-input');
+                const subtotalCell = row.querySelector('.row-subtotal');
+                const price = parseFloat(input.getAttribute('data-price')) || 0;
+                const qty = Math.max(0, parseInt(input.value) || 0);
+                const sub = price * qty;
+                subtotalCell.textContent = sub.toFixed(2) + ' €';
+                total += sub;
+            });
+
+            const addSelect = document.getElementById('addProductSelect');
+            const selectedOption = addSelect.options[addSelect.selectedIndex];
+            const addPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const addQty = Math.max(0, parseInt(document.getElementById('addProductQty').value) || 0);
+            if (addPrice > 0 && addQty > 0) {
+                total += addPrice * addQty;
+            }
+
+            document.getElementById('live-total').textContent = total.toFixed(2) + ' €';
+        }
+    </script>
+
+</body>
+</html>

@@ -67,4 +67,34 @@ public class EmailService {
                     e.getClass().getSimpleName(), e.getMessage(), activationLink);
         }
     }
+
+    public void sendOrderCancellationEmail(com.himalaya.sabor.model.User user, com.himalaya.sabor.model.Order order) {
+        log.info("📧 ENVIANDO NOTIFICACIÓN DE CANCELACIÓN DE PEDIDO {} a {}", order.getOrderNumber(), user.getEmail());
+        try {
+            Context context = new Context();
+            context.setVariable("recipientName", user.getName());
+            context.setVariable("orderNumber", order.getOrderNumber());
+            context.setVariable("totalAmount", order.getTotalAmount());
+
+            String htmlContent = templateEngine.process("mail/order-cancelled-email", context);
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            String senderAddress = (fromEmail != null && !fromEmail.isBlank())
+                    ? fromEmail
+                    : "no-reply@sabordelhimalaya.com";
+
+            helper.setFrom(new InternetAddress(senderAddress, "Sabor del Himalaya"));
+            helper.setTo(user.getEmail());
+            helper.setSubject("Pedido cancelado sin coste (" + order.getOrderNumber() + ") - Sabor del Himalaya");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(mimeMessage);
+            log.info("✓ [ÉXITO] Notificación de cancelación enviada a {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("⚠️ [ERROR AL ENVIAR NOTIFICACIÓN DE CANCELACIÓN] {}: {}",
+                    e.getClass().getSimpleName(), e.getMessage());
+        }
+    }
 }

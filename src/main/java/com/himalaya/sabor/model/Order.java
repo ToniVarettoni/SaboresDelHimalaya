@@ -157,4 +157,34 @@ public class Order {
         items.remove(item);
         item.setOrder(null);
     }
+
+    /**
+     * Comprueba si el pedido se encuentra dentro de la ventana de 10 minutos desde su creación.
+     */
+    @Transient
+    public boolean isWithinTenMinutes() {
+        if (createdAt == null) {
+            return false;
+        }
+        return !LocalDateTime.now().isAfter(createdAt.plusMinutes(10));
+    }
+
+    /**
+     * Indica si el pedido puede modificarse o cancelarse (dentro de los 10 minutos y no cancelado/entregado).
+     */
+    @Transient
+    public boolean isModifiable() {
+        return isWithinTenMinutes()
+                && status != OrderStatus.CANCELADO
+                && status != OrderStatus.ENTREGADO;
+    }
+
+    @Transient
+    public long getRemainingModificationMinutes() {
+        if (!isWithinTenMinutes()) {
+            return 0;
+        }
+        long seconds = java.time.Duration.between(LocalDateTime.now(), createdAt.plusMinutes(10)).getSeconds();
+        return Math.max(1, (seconds + 59) / 60);
+    }
 }

@@ -118,4 +118,41 @@ public class OrderItem {
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
     }
+
+    /**
+     * Nombre legible del ítem (producto de carta o menú diario).
+     */
+    @Transient
+    public String getDisplayName() {
+        if (product != null) {
+            return product.getName();
+        }
+        String extracted = extractJsonField("name");
+        return extracted != null ? extracted : "Menú Diario";
+    }
+
+    /**
+     * Detalle de platos elegidos en caso de ser un menú diario.
+     */
+    @Transient
+    public String getDisplayDetails() {
+        return extractJsonField("platos");
+    }
+
+    private String extractJsonField(String field) {
+        if (itemDetailsJson == null || itemDetailsJson.isBlank()) {
+            return null;
+        }
+        String token = "\"" + field + "\":\"";
+        int start = itemDetailsJson.indexOf(token);
+        if (start < 0) {
+            return null;
+        }
+        int valStart = start + token.length();
+        int valEnd = itemDetailsJson.indexOf("\"", valStart);
+        if (valEnd < 0) {
+            return null;
+        }
+        return itemDetailsJson.substring(valStart, valEnd);
+    }
 }

@@ -40,7 +40,8 @@
             <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between"
                  th:classappend="${order.status.name() == 'RECIBIDO'} ? 'bg-blue-50' :
                                      (${order.status.name() == 'EN_PREPARACION'} ? 'bg-amber-50' :
-                                     (${order.status.name() == 'ENTREGADO'} ? 'bg-green-50' : 'bg-red-50'))">
+                                     (${order.status.name() == 'EN_REPARTO'} ? 'bg-purple-50' :
+                                     (${order.status.name() == 'ENTREGADO'} ? 'bg-green-50' : 'bg-red-50')))">
                 <div>
                     <p class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Pedido</p>
                     <p class="font-mono font-bold text-stone-900 text-sm" th:text="${order.orderNumber}">PED-...</p>
@@ -49,9 +50,10 @@
                 <span class="text-xs font-bold px-3 py-1 rounded-full"
                       th:classappend="${order.status.name() == 'RECIBIDO'}      ? 'bg-blue-100 text-blue-800' :
                                           (${order.status.name() == 'EN_PREPARACION'} ? 'bg-amber-200 text-amber-900' :
+                                          (${order.status.name() == 'EN_REPARTO'}     ? 'bg-purple-100 text-purple-800' :
                                           (${order.status.name() == 'ENTREGADO'}     ? 'bg-green-100 text-green-800' :
-                                                                                        'bg-red-100 text-red-700'))"
-                      th:text="${order.status}">RECIBIDO</span>
+                                                                                        'bg-red-100 text-red-700')))"
+                      th:text="${order.status.displayName}">Recibido</span>
             </div>
             <!-- Cuerpo -->
             <div class="p-5 flex-grow space-y-3">
@@ -95,7 +97,7 @@
                             class="flex-grow border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:ring-amber-500 focus:border-amber-500">
                         <option th:each="s : ${statuses}"
                                 th:value="${s}"
-                                th:text="${s}"
+                                th:text="${s.displayName}"
                                 th:selected="${s == order.status}">Estado</option>
                     </select>
                     <button type="submit"

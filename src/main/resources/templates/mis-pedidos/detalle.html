@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Pedido ' + ${order.orderNumber} + ' - Sabor del Himalaya'">Detalle del Pedido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-stone-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-6">
+
+        <!-- Cabecera -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 pb-4 gap-3">
+            <div>
+                <a href="/mis-pedidos" class="text-xs font-semibold text-amber-800 hover:underline">← Volver a Mis Pedidos</a>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 mt-1">
+                    Pedido <span class="font-mono text-amber-900" th:text="${order.orderNumber}">PED-XXXX</span>
+                </h1>
+                <p class="text-xs text-stone-500 mt-1"
+                   th:text="'Realizado el ' + ${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">Fecha</p>
+            </div>
+            <span class="self-start sm:self-center text-sm font-bold px-4 py-1.5 rounded-full"
+                  th:classappend="${order.status.name() == 'RECIBIDO'} ? 'bg-blue-100 text-blue-800' :
+                                  (${order.status.name() == 'EN_PREPARACION'} ? 'bg-amber-200 text-amber-900' :
+                                  (${order.status.name() == 'EN_REPARTO'} ? 'bg-purple-100 text-purple-800' :
+                                  (${order.status.name() == 'ENTREGADO'} ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-700')))"
+                  th:text="${order.status.displayName}">Recibido</span>
+        </div>
+
+        <!-- Mensajes -->
+        <div th:if="${successMsg}"
+             class="bg-green-50 border border-green-300 text-green-800 text-sm px-5 py-3 rounded-xl font-medium">
+            ✅ <span th:text="${successMsg}"></span>
+        </div>
+        <div th:if="${errorMsg}"
+             class="bg-red-50 border border-red-300 text-red-700 text-sm px-5 py-3 rounded-xl font-medium">
+            ⚠️ <span th:text="${errorMsg}"></span>
+        </div>
+
+        <!-- Aviso de ventana de 10 minutos -->
+        <div th:if="${order.modifiable}"
+             class="bg-amber-100 border border-amber-300 text-amber-900 text-sm px-5 py-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span>⏱️ Aún dispones de <strong th:text="${order.remainingModificationMinutes}"></strong> min para modificar o cancelar este pedido sin coste.</span>
+            <div class="flex gap-2">
+                <a th:href="@{'/mis-pedidos/' + ${order.id} + '/modificar'}"
+                   class="px-3 py-1.5 rounded-lg bg-amber-800 hover:bg-amber-700 text-white text-xs font-semibold transition">
+                    ✏️ Modificar Pedido
+                </a>
+                <button type="button"
+                        onclick="document.getElementById('cancel-modal').classList.remove('hidden')"
+                        class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition">
+                    ✕ Cancelar Pedido
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${!order.withinTenMinutes and order.status.name() != 'CANCELADO' and order.status.name() != 'ENTREGADO'}"
+             class="bg-stone-100 border border-stone-300 text-stone-600 text-xs px-5 py-3 rounded-xl">
+            🔒 El plazo límite de 10 minutos para modificar o cancelar el pedido ha expirado.
+        </div>
+
+        <!-- Datos de entrega y pago -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-xs font-semibold text-stone-500 uppercase">Dirección de entrega</p>
+                <p class="font-medium text-stone-900 mt-1" th:text="${order.deliveryAddress}">Calle...</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-stone-500 uppercase">Teléfono de contacto</p>
+                <p class="font-medium text-stone-900 mt-1" th:text="${order.phone}">600...</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-stone-500 uppercase">Forma de pago</p>
+                <p class="font-medium text-stone-900 mt-1" th:text="${order.paymentMethod}">EFECTIVO</p>
+            </div>
+            <div th:if="${order.notes != null and !#strings.isEmpty(order.notes)}">
+                <p class="text-xs font-semibold text-stone-500 uppercase">Observaciones</p>
+                <p class="font-medium text-stone-900 mt-1" th:text="${order.notes}">Notas</p>
+            </div>
+        </div>
+
+        <!-- Detalle de productos comprados (CA11.2) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="bg-amber-900 text-white px-5 py-3">
+                <h2 class="text-sm font-semibold uppercase tracking-wider">Productos del pedido</h2>
+            </div>
+            <table class="min-w-full divide-y divide-stone-100">
+                <thead class="bg-stone-50">
+                    <tr>
+                        <th class="py-3 px-5 text-left text-xs font-semibold text-stone-500 uppercase">Producto / Menú</th>
+                        <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Cant.</th>
+                        <th class="py-3 px-5 text-center text-xs font-semibold text-stone-500 uppercase">Precio unit.</th>
+                        <th class="py-3 px-5 text-right text-xs font-semibold text-stone-500 uppercase">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    <tr th:each="item : ${order.items}">
+                        <td class="py-3.5 px-5">
+                            <p class="font-semibold text-stone-900 text-sm" th:text="${item.displayName}">Nombre</p>
+                            <p th:if="${item.displayDetails != null and !#strings.isEmpty(item.displayDetails)}"
+                               class="text-xs text-stone-500 mt-0.5"
+                               th:text="${item.displayDetails}">Detalle menú</p>
+                        </td>
+                        <td class="py-3.5 px-5 text-center text-sm text-stone-700" th:text="${item.quantity}">1</td>
+                        <td class="py-3.5 px-5 text-center text-sm text-stone-700"
+                            th:text="${#numbers.formatDecimal(item.unitPrice, 1, 2)} + ' €'">0.00 €</td>
+                        <td class="py-3.5 px-5 text-right text-sm font-bold text-stone-900"
+                            th:text="${#numbers.formatDecimal(item.subtotal, 1, 2)} + ' €'">0.00 €</td>
+                    </tr>
+                </tbody>
+                <tfoot class="bg-amber-50">
+                    <tr>
+                        <td colspan="3" class="py-4 px-5 text-right text-sm font-bold text-stone-700 uppercase">Importe Total</td>
+                        <td class="py-4 px-5 text-right text-xl font-extrabold text-amber-900"
+                            th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)} + ' €'">0.00 €</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Modal confirmación cancelación -->
+    <div id="cancel-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h2 class="text-lg font-bold text-stone-900">¿Cancelar pedido?</h2>
+            <p class="text-sm text-stone-600">
+                Estás a punto de cancelar el pedido <strong class="font-mono text-amber-900" th:text="${order.orderNumber}"></strong> sin coste.
+            </p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('cancel-modal').classList.add('hidden')"
+                        class="px-4 py-2 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-medium transition">
+                    Volver
+                </button>
+                <form th:action="@{'/mis-pedidos/' + ${order.id} + '/cancelar'}" method="post">
+                    <button type="submit"
+                            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition">
+                        Sí, cancelar sin coste
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-stone-100 border-t border-stone-200 py-6 text-center text-xs text-stone-500 mt-10">
+        © 2026 Sabor del Himalaya - Auténtica Cocina Nepalí a Domicilio. Todos los derechos reservados.
+    </footer>
+
+</body>
+</html>
