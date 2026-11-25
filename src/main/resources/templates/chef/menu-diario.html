@@ -60,7 +60,7 @@
                             <select th:field="*{entrantes[__${i}__].productId}"
                                     class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
                                 <option value="">— Plato nuevo (rellenar abajo) —</option>
-                                <option th:each="p : ${products}"
+                                <option th:each="p : ${entrantesProducts}"
                                         th:value="${p.id}"
                                         th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
                             </select>
@@ -98,7 +98,7 @@
                             <select th:field="*{principales[__${i}__].productId}"
                                     class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
                                 <option value="">— Plato nuevo (rellenar abajo) —</option>
-                                <option th:each="p : ${products}"
+                                <option th:each="p : ${principalesProducts}"
                                         th:value="${p.id}"
                                         th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
                             </select>
@@ -134,7 +134,7 @@
                             <select th:field="*{postres[__${i}__].productId}"
                                     class="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
                                 <option value="">— Plato nuevo (rellenar abajo) —</option>
-                                <option th:each="p : ${products}"
+                                <option th:each="p : ${postresProducts}"
                                         th:value="${p.id}"
                                         th:text="${p.name + ' (' + p.category.name + ')'}">Producto</option>
                             </select>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="orderCard(order)"
+         class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col overflow-hidden hover:shadow-md transition">
+        <!-- Cabecera de la card -->
+        <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between"
+             th:classappend="${order.status.name() == 'RECIBIDO'} ? 'bg-blue-50' :
+                             (${order.status.name() == 'EN_PREPARACION'} ? 'bg-amber-50' :
+                             (${order.status.name() == 'EN_REPARTO'} ? 'bg-purple-50' :
+                             (${order.status.name() == 'ENTREGADO'} ? 'bg-green-50' : 'bg-red-50')))">
+            <div>
+                <p class="text-xs text-stone-500 uppercase font-semibold tracking-wide">Pedido</p>
+                <p class="font-mono font-bold text-stone-900 text-sm" th:text="${order.orderNumber}">PED-...</p>
+            </div>
+            <!-- Badge de estado -->
+            <span class="text-xs font-bold px-3 py-1 rounded-full"
+                  th:classappend="${order.status.name() == 'RECIBIDO'}      ? 'bg-blue-100 text-blue-800' :
+                                  (${order.status.name() == 'EN_PREPARACION'} ? 'bg-amber-200 text-amber-900' :
+                                  (${order.status.name() == 'EN_REPARTO'}     ? 'bg-purple-100 text-purple-800' :
+                                  (${order.status.name() == 'ENTREGADO'}     ? 'bg-green-100 text-green-800' :
+                                                                                'bg-red-100 text-red-700')))"
+                  th:text="${order.status.displayName}">Recibido</span>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="p-5 flex-grow space-y-3">
+            <!-- Cliente y fecha -->
+            <div class="flex items-center justify-between text-xs text-stone-500">
+                <span class="font-semibold text-stone-700" th:text="${order.user.name}">Cliente</span>
+                <span th:text="${#temporals.format(order.createdAt, 'dd/MM HH:mm')}">01/01 12:00</span>
+            </div>
+
+            <!-- Artículos -->
+            <ul class="text-sm text-stone-700 space-y-1 border-t border-stone-100 pt-2">
+                <li th:each="item : ${order.items}" class="flex justify-between gap-2">
+                    <span>
+                        <span th:text="${item.quantity}">1</span>×
+                        <span th:text="${item.displayName}">Producto</span>
+                    </span>
+                    <span class="font-semibold whitespace-nowrap" th:text="${#numbers.formatDecimal(item.subtotal, 1, 2)} + ' €'">0.00 €</span>
+                </li>
+            </ul>
+
+            <!-- Entrega -->
+            <div class="border-t border-stone-100 pt-2 text-xs text-stone-600 space-y-1">
+                <p>📍 <span th:text="${order.deliveryAddress}">Dirección</span></p>
+                <p>📞 <span th:text="${order.phone}">Teléfono</span></p>
+                <p th:if="${order.notes != null and !#strings.isEmpty(order.notes)}">
+                    📝 <span th:text="${order.notes}"></span>
+                </p>
+            </div>
+
+            <!-- Total -->
+            <div class="flex items-center justify-between pt-1">
+                <span class="text-xs text-stone-500 font-semibold uppercase">Total</span>
+                <span class="text-lg font-extrabold text-amber-900"
+                      th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)} + ' €'">0.00 €</span>
+            </div>
+        </div>
+
+        <!-- Pie: cambiar estado -->
+        <div class="px-5 py-4 border-t border-stone-100 bg-stone-50">
+            <form th:action="@{'/chef/pedidos/' + ${order.id} + '/estado'}" method="post"
+                  class="flex items-center space-x-2">
+                <select name="status"
+                        class="flex-grow border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:ring-amber-500 focus:border-amber-500">
+                    <option th:each="s : ${statuses}"
+                            th:value="${s}"
+                            th:text="${s.displayName}"
+                            th:selected="${s == order.status}">Estado</option>
+                </select>
+                <button type="submit"
+                        class="px-3 py-1.5 rounded-lg bg-amber-800 hover:bg-amber-700 text-white text-xs font-bold transition whitespace-nowrap">
+                    Actualizar
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

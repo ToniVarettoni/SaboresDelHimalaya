@@ -25,20 +25,24 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public DataInitializer(UserRepository userRepository,
                            CategoryRepository categoryRepository,
                            ProductRepository productRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
+        syncSchemaConstraints();
         if (userRepository.count() == 0 && categoryRepository.count() == 0) {
             log.info("Base de datos vacía. Iniciando la carga de datos de prueba...");
 
@@ -72,12 +76,12 @@ public class DataInitializer implements CommandLineRunner {
             // 2. Categorías
             Map<String, Category> categories = new HashMap<>();
 
-            Category entrantes = new Category("Entrantes", "entrantes");
-            Category ensaladas = new Category("Ensaladas", "ensaladas");
-            Category tandoori = new Category("Tandoori", "tandoori");
-            Category postres = new Category("Postres", "postres");
-            Category bebidasNepal = new Category("Bebidas típicas nepalíes", "bebidas-tipicas-nepalies");
-            Category bebidasTrad = new Category("Bebidas tradicionales", "bebidas-tradicionales");
+            Category entrantes = new Category("Entrantes", "entrantes", CourseType.ENTRANTE);
+            Category ensaladas = new Category("Ensaladas", "ensaladas", CourseType.ENTRANTE);
+            Category tandoori = new Category("Tandoori", "tandoori", CourseType.PRINCIPAL);
+            Category postres = new Category("Postres", "postres", CourseType.POSTRE);
+            Category bebidasNepal = new Category("Bebidas típicas nepalíes", "bebidas-tipicas-nepalies", null);
+            Category bebidasTrad = new Category("Bebidas tradicionales", "bebidas-tradicionales", null);
 
             categories.put("entrantes", categoryRepository.save(entrantes));
             categories.put("ensaladas", categoryRepository.save(ensaladas));
@@ -173,5 +177,40 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             log.info("La base de datos ya contiene registros. Se omite el seeding inicial.");
         }
+    }
+
+    /**
+     * Garantiza que el CHECK constraint de orders.status en PostgreSQL acepte todos los valores
+     * actuales de OrderStatus (incluido EN_REPARTO) y rellena courseType en categorías existentes.
+     */
+    private void syncSchemaConstraints() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check");
+            jdbcTemplate.execute(
+                "ALTER TABLE orders ADD CONSTRAINT orders_status_check " +
+                "CHECK (status IN ('RECIBIDO', 'EN_PREPARACION', 'EN_REPARTO', 'ENTREGADO', 'CANCELADO'))"
+            );
+        } catch (Exception e) {
+            log.debug("No se pudo actualizar orders_status_check (puede no aplicar en este motor): {}", e.getMessage());
+        }
+
+        categoryRepository.findAll().forEach(cat -> {
+            if (cat.getCourseType() == null && cat.getSlug() != null) {
+                switch (cat.getSlug().toLowerCase()) {
+                    case "entrantes", "ensaladas" -> {
+                        cat.setCourseType(CourseType.ENTRANTE);
+                        categoryRepository.save(cat);
+                    }
+                    case "tandoori", "principales", "platos-principales" -> {
+                        cat.setCourseType(CourseType.PRINCIPAL);
+                        categoryRepository.save(cat);
+                    }
+                    case "postres" -> {
+                        cat.setCourseType(CourseType.POSTRE);
+                        categoryRepository.save(cat);
+                    }
+                }
+            }
+        });
     }
 }

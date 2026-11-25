@@ -100,4 +100,29 @@ public class ProductService {
                 .filter(p -> p.getStatus() == ProductStatus.ACTIVO)
                 .toList();
     }
+
+    /** Productos activos filtrados por el tipo de plato (ENTRANTE, PRINCIPAL, POSTRE). */
+    @Transactional(readOnly = true)
+    public List<Product> findActiveByCourseType(com.himalaya.sabor.model.CourseType courseType) {
+        return productRepository.findAllByOrderByIdAsc().stream()
+                .filter(p -> p.getStatus() == ProductStatus.ACTIVO)
+                .filter(p -> resolveCourseType(p.getCategory()) == courseType)
+                .toList();
+    }
+
+    private com.himalaya.sabor.model.CourseType resolveCourseType(Category category) {
+        if (category == null) {
+            return null;
+        }
+        if (category.getCourseType() != null) {
+            return category.getCourseType();
+        }
+        String slug = category.getSlug() != null ? category.getSlug().toLowerCase() : "";
+        return switch (slug) {
+            case "entrantes", "ensaladas" -> com.himalaya.sabor.model.CourseType.ENTRANTE;
+            case "tandoori", "principales", "platos-principales" -> com.himalaya.sabor.model.CourseType.PRINCIPAL;
+            case "postres" -> com.himalaya.sabor.model.CourseType.POSTRE;
+            default -> null;
+        };
+    }
 }

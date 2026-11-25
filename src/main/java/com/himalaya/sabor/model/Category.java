@@ -16,12 +16,21 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String slug;
 
+    @Enumerated(EnumType.STRING)
+    private CourseType courseType;
+
     public Category() {
     }
 
     public Category(String name, String slug) {
         this.name = name;
         this.slug = slug;
+    }
+
+    public Category(String name, String slug, CourseType courseType) {
+        this.name = name;
+        this.slug = slug;
+        this.courseType = courseType;
     }
 
     public Long getId() {
@@ -46,5 +55,13 @@ public class Category {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public CourseType getCourseType() {
+        return courseType;
+    }
+
+    public void setCourseType(CourseType courseType) {
+        this.courseType = courseType;
     }
 }
