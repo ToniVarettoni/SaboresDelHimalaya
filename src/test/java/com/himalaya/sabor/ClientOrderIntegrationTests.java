@@ -95,7 +95,7 @@ class ClientOrderIntegrationTests {
 
     @Test
     @WithMockUser(username = "cliente.pedidos@himalaya.com", roles = {"CLIENT"})
-    @DisplayName("US12 (CA12.2): modifica cantidad, añade producto y dirección dentro de los 10 minutos recalculando el total")
+    @DisplayName("US12 (CA12.2): modifica cantidad, añade producto y dirección dentro de los 10 minutos recalculando el total, y el pedido sigue en Recibido (D-15)")
     void clientModifiesOrderWithinTenMinutes() throws Exception {
         Order order = crearPedido(OrderStatus.RECIBIDO, LocalDateTime.now().minusMinutes(3), 1);
         Long itemId = order.getItems().get(0).getId();
@@ -118,6 +118,8 @@ class ClientOrderIntegrationTests {
         assertThat(updated.getPhone()).isEqualTo("699888777");
         assertThat(updated.getItems()).hasSize(2);
         assertThat(updated.getTotalAmount()).isEqualByComparingTo(expectedTotal);
+        // D-15: modificar el pedido no debe cancelarlo; sigue en estado RECIBIDO
+        assertThat(updated.getStatus()).isEqualTo(OrderStatus.RECIBIDO);
     }
 
     @Test
