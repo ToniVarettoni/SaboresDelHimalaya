@@ -128,6 +128,15 @@ public class ChefController {
                                @RequestParam OrderStatus status,
                                RedirectAttributes redirectAttrs) {
         orderRepository.findById(id).ifPresentOrElse(order -> {
+            OrderStatus siguiente = order.getStatus().next();
+            if (siguiente == null || status != siguiente) {
+                // US14 (CA14.1): el estado solo avanza de forma secuencial
+                redirectAttrs.addFlashAttribute("errorMsg", siguiente == null
+                        ? "El pedido " + order.getOrderNumber() + " ya está finalizado"
+                        : "El pedido " + order.getOrderNumber() + " solo puede pasar de "
+                          + order.getStatus().getDisplayName() + " a " + siguiente.getDisplayName());
+                return;
+            }
             order.setStatus(status);
             orderRepository.save(order);
             String clientName = order.getUser().getName();

@@ -49,7 +49,8 @@
             <!-- Si el menú diario está publicado para hoy -->
             <div th:if="${dailyMenu != null}" class="mt-6 space-y-4">
                 <p class="text-sm text-stone-700 font-medium">
-                    El chef ha configurado las siguientes opciones para el día de hoy:
+                    Menú del día <span th:text="${#temporals.format(dailyMenu.date, 'dd/MM/yyyy')}">01/01/2026</span>.
+                    El chef ha configurado las siguientes opciones:
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                     <!-- Entrantes -->
@@ -100,7 +101,7 @@
 
             <!-- Si el menú diario no está publicado para hoy -->
             <div th:if="${dailyMenu == null}" class="mt-6 p-4 rounded-lg bg-stone-100 text-stone-600 text-sm text-center">
-                El menú para un día no está configurado, el sistema informará al cliente de que esa opción no está disponible para ese día.
+                La opción de menú diario no está disponible para la fecha seleccionada
             </div>
         </section>
 

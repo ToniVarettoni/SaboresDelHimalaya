@@ -16,4 +16,14 @@ public enum OrderStatus {
     public String getDisplayName() {
         return displayName;
     }
+
+    /** Siguiente estado del flujo del restaurante (US14, CA14.1); null si el pedido ya está finalizado. */
+    public OrderStatus next() {
+        return switch (this) {
+            case RECIBIDO -> EN_PREPARACION;
+            case EN_PREPARACION -> EN_REPARTO;
+            case EN_REPARTO -> ENTREGADO;
+            default -> null;
+        };
+    }
 }

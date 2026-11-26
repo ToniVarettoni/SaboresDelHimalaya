@@ -49,7 +49,7 @@ class ChefPanelIntegrationTests {
 
     @Test
     @WithMockUser(username = "chef@himalaya.com", roles = {"CHEF"})
-    @DisplayName("Chef Pedidos: muestra pedidos de hoy, agrupa anteriores y actualiza a En reparto con mensaje personalizado")
+    @DisplayName("Chef Pedidos: muestra pedidos de hoy, agrupa anteriores y avanza Recibido → En preparación → En reparto con mensaje personalizado")
     void chefPedidosByDateAndUpdateStatusToEnReparto() throws Exception {
         User cliente = userRepository.save(new User("María López", "maria.chef.test@himalaya.com",
                 passwordEncoder.encode("pass123"), "Calle Luna 5", "611222333", Role.CLIENT, UserStatus.ACTIVA));
@@ -87,6 +87,11 @@ class ChefPanelIntegrationTests {
 
         mockMvc.perform(post("/chef/pedidos/" + hoy.getId() + "/estado")
                         .with(csrf())
+                        .param("status", "EN_PREPARACION"))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(post("/chef/pedidos/" + hoy.getId() + "/estado")
+                        .with(csrf())
                         .param("status", "EN_REPARTO"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/chef/pedidos"))
@@ -94,5 +99,34 @@ class ChefPanelIntegrationTests {
 
         Order updated = orderRepository.findById(hoy.getId()).orElseThrow();
         assertThat(updated.getStatus()).isEqualTo(OrderStatus.EN_REPARTO);
+    }
+
+    @Test
+    @WithMockUser(username = "chef@himalaya.com", roles = {"CHEF"})
+    @DisplayName("US14 (CA14.1): el estado avanza de forma secuencial; no se puede saltar de Recibido a Entregado")
+    void chefCannotSkipOrderStates() throws Exception {
+        User cliente = userRepository.save(new User("Pablo Ruiz", "pablo.chef.test@himalaya.com",
+                passwordEncoder.encode("pass123"), "Calle Sol 3", "622333444", Role.CLIENT, UserStatus.ACTIVA));
+        Product p = productRepository.findAll().get(0);
+        Order pedido = new Order();
+        pedido.setOrderNumber("PED-SALTO-001");
+        pedido.setUser(cliente);
+        pedido.setDeliveryAddress("Calle Sol 3");
+        pedido.setPhone("622333444");
+        pedido.setPaymentMethod(PaymentMethod.EFECTIVO);
+        pedido.setStatus(OrderStatus.RECIBIDO);
+        pedido.setCreatedAt(LocalDateTime.now());
+        pedido.setTotalAmount(p.getPrice());
+        pedido.addItem(new OrderItem(pedido, p, p.getPrice(), 1, p.getPrice()));
+        orderRepository.save(pedido);
+
+        mockMvc.perform(post("/chef/pedidos/" + pedido.getId() + "/estado")
+                        .with(csrf())
+                        .param("status", "ENTREGADO"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/chef/pedidos"))
+                .andExpect(flash().attributeExists("errorMsg"));
+
+        assertThat(orderRepository.findById(pedido.getId()).orElseThrow().getStatus()).isEqualTo(OrderStatus.RECIBIDO);
     }
 }
